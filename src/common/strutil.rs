@@ -27,7 +27,7 @@ pub fn to_num<T: FromStr>(s : &str, default_value : T) -> T {
     }
 }
 
-pub fn maybe_to_num<T: FromStr>(s : Option<~str>, default_value : T) -> T {
+pub fn maybe_to_num<T: FromStr>(s : Option<Box<str>>, default_value : T) -> T {
     match s {
         Some(s) => to_num(s, default_value),
         None => default_value
@@ -35,12 +35,12 @@ pub fn maybe_to_num<T: FromStr>(s : Option<~str>, default_value : T) -> T {
 }
 
 // Split a string into parts, trimming it and trimming its parts after split.
-pub fn clean_split<Sep: CharEq>(s : &str, seperator: Sep) -> ~[&str] {
+pub fn clean_split<Sep: CharEq>(s : &str, seperator: Sep) -> Box<[&str]> {
     let parts = s
         .trim()
         .split_iter(seperator)
         .map(|p| p.trim())
-        .collect::<~[&str]>();
+        .collect::<Box<[&str]>>();
     return parts;
 }
 

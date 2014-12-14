@@ -151,12 +151,12 @@ impl ProtoConnection for AsciiConnection {
 
     //// Retrieval command
 
-    fn p_get(&mut self, keys: &[&str]) -> ~[MemData] {
+    fn p_get(&mut self, keys: &[&str]) -> Box<[MemData]> {
         let req = "get " + keys.connect(" ") + "\r\n";
         return self.ascii_send_get_request(req);
     }
 
-    fn p_gets(&mut self, keys: &[&str]) -> ~[MemData] {
+    fn p_gets(&mut self, keys: &[&str]) -> Box<[MemData]> {
         let req = "gets " + keys.connect(" ") + "\r\n";
         return self.ascii_send_get_request(req);
     }
@@ -164,7 +164,7 @@ impl ProtoConnection for AsciiConnection {
 
     //// Other commands
 
-    fn p_version(&mut self) -> Result<~str, ~str> {
+    fn p_version(&mut self) -> Result<Box<str>, Box<str>> {
         self.ascii_write_data(bytes!("version\r\n"));
         return self.ascii_read_line();
     }
@@ -179,10 +179,10 @@ impl ProtoConnection for AsciiConnection {
         return self.ascii_send_simple_request(req, noreply);
     }
 
-    fn p_stats(&mut self) -> ~[MemcachedStat] {
+    fn p_stats(&mut self) -> Box<[MemcachedStat]> {
         self.ascii_write_data(bytes!("stats\r\n"));
 
-        let mut stats : ~[MemcachedStat] = ~[];
+        let mut stats = vec!();
         loop {
             let stat_line = self.ascii_read_line().unwrap();
             //debug!( fmt!("stat_line: %?", stat_line) );
@@ -207,7 +207,7 @@ impl ProtoConnection for AsciiConnection {
 
 
     // Server config
-    fn p_get_server_addr(&self) -> ~str {
+    fn p_get_server_addr(&self) -> Box<str> {
         return self.server_addr.to_str();
     }
 
@@ -254,16 +254,16 @@ impl AsciiConnection {
 
     }
 
-    fn ascii_get_server_addr(&self) -> ~str {
+    fn ascii_get_server_addr(&self) -> Box<str> {
         return self.server_addr.to_str();
     }
 
 
-    fn ascii_format_store_cmd(&self, cmd: &str, key: &str, data: &[u8], flags: u32, exptime: uint, noreply: bool) -> ~str {
+    fn ascii_format_store_cmd(&self, cmd: &str, key: &str, data: &[u8], flags: u32, exptime: uint, noreply: bool) -> Box<str> {
         return format!("{} {} {} {} {} {}\r\n", cmd, key, flags, exptime, data.len(), (if noreply { "noreply" } else { "" }) );
     }
 
-    fn ascii_format_cas_cmd(&self, key: &str, data: &[u8], cas: u64, flags: u32, exptime: uint, noreply: bool) -> ~str {
+    fn ascii_format_cas_cmd(&self, key: &str, data: &[u8], cas: u64, flags: u32, exptime: uint, noreply: bool) -> Box<str> {
         return format!("cas {} {} {} {} {} {}\r\n", key, flags, exptime, data.len(), cas, (if noreply { "noreply" } else { "" }) );
     }
 
@@ -291,11 +291,11 @@ impl AsciiConnection {
         }
     }
 
-    fn ascii_send_get_request(&mut self, request: &str) -> ~[MemData] {
+    fn ascii_send_get_request(&mut self, request: &str) -> Box<[MemData]> {
         debug!(request);
         self.ascii_write_data(request.as_bytes());
 
-        let mut mdata_list : ~[MemData] = ~[];
+        let mut mdata_list = vec!();
         let mut dummy = [0u8, ..2];
         loop {
             let value_line = self.ascii_read_line().unwrap();
@@ -327,9 +327,9 @@ impl AsciiConnection {
         self.stream.write(data);
     }
 
-    fn ascii_read_line(&mut self) -> Result<~str, ~str> {
+    fn ascii_read_line(&mut self) -> Result<Box<str>, Box<str>> {
         // TODO: terribly inefficient.  Replace this with Rust's BufferedStream version when it's ready. 
-        let mut line = ~"";
+        let mut line = box "";
         let mut buf = [0u8, ..1];
         loop {
             self.stream.read(buf);
@@ -339,7 +339,7 @@ impl AsciiConnection {
                     if buf[0] == LF {
                         break;
                     } else {
-                        return Err(~"Missing LF after CR from server");
+                        return Err(box "Missing LF after CR from server");
                     }
                 },
                 _ => {

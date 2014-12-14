@@ -25,7 +25,7 @@
  ******************************************************************************/
 
 
-extern mod extra;
+extern crate extra;
 
 use std::result::Result;
 use std::str;
@@ -85,8 +85,8 @@ pub fn connect_with(params: MemParams) -> RustyMem  {
     debug!( fmt!("connect_with() enter, %?", params) );
 
     let addrs = strutil::clean_split(params.servers, ' ');
-    let connections = addrs.iter().map( |addr| new_protocol_connection(*addr, params.protocol) ).collect::<~[~ProtoConnection]>();
-    let conn_addrs = connections.iter().map( |conn| conn.p_get_server_addr() ).collect::<~[~str]>();
+    let connections = addrs.iter().map( |addr| new_protocol_connection(*addr, params.protocol) ).collect::<Box<[Box<ProtoConnection>]>>();
+    let conn_addrs = connections.iter().map( |conn| conn.p_get_server_addr() ).collect::<Box<[Box<str>]>>();
     debug!( fmt!("server_addrs : %?", conn_addrs) );
 
     RustyMem {
@@ -95,19 +95,19 @@ pub fn connect_with(params: MemParams) -> RustyMem  {
     }
 }
 
-fn new_protocol_connection(server_addr: &str, protocol: MemProtocol) -> ~ProtoConnection {
+fn new_protocol_connection(server_addr: &str, protocol: MemProtocol) -> Box<ProtoConnection> {
     let host_addr = netutil::HostAddr::with_host_port(server_addr, DEFAULT_PORT);
     match protocol {
         // TODO: collect connection errors and save them in RustyMem
-        P_ASCII     => ~AsciiConnection::new_connection(host_addr) as ~ProtoConnection,
-        P_BINARY    => ~BinaryConnection::new_connection(host_addr) as ~ProtoConnection,
+        P_ASCII     => box AsciiConnection::new_connection(host_addr) as Box<ProtoConnection>,
+        P_BINARY    => box BinaryConnection::new_connection(host_addr) as Box<ProtoConnection>,
     }
 }
 
 
 pub struct RustyMem {
     params:         MemParams,
-    connections:    ~[~ProtoConnection]
+    connections:    Box<[Box<ProtoConnection>]>
 }
 
 /// Main entry for the Memcached API
@@ -221,7 +221,7 @@ impl RustyMem {
     }
 
     /// Get data bytes at key from memcached.  Return None if no data found or error.
-    pub fn get_bytes(&mut self, key: &str) -> Option<~[u8]> {
+    pub fn get_bytes(&mut self, key: &str) -> Option<Box<[u8]>> {
         match self.get_data(key) {
             Some(md) => Some(md.as_bytes()),
             None => None
@@ -229,7 +229,7 @@ impl RustyMem {
     }
 
     /// Get data str at key from memcached.  Return None if no data found or error.
-    pub fn get_str(&mut self, key: &str) -> Option<~str> {
+    pub fn get_str(&mut self, key: &str) -> Option<Box<str>> {
         match self.get_data(key) {
             Some(md) => Some(md.as_str()),
             None => None
@@ -257,19 +257,19 @@ impl RustyMem {
 
 
     /// Get the list of data as MemData of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_data(&mut self, keys: &[&str]) -> ~[MemData] {
+    pub fn get_bulk_data(&mut self, keys: &[&str]) -> Box<[MemData]> {
         if self.get_connection_count() == 1 {
             let conn = self.get_connection(0);
             return conn.p_gets(keys);
         }
 
-        let mut result : ~[MemData] = ~[];
-        let key_arrays : ~[~[~str]] = RustyMem::distribute_keys(keys, self.get_connection_count(), RustyMem::md5_mod_indexer);
+        let mut result = vec![];
+        let key_arrays : Box<[Box<[Box<str>]>]> = RustyMem::distribute_keys(keys, self.get_connection_count(), RustyMem::md5_mod_indexer);
         for i in range(0, self.get_connection_count()) {
             if key_arrays[i].len() > 0 {
-                let key_array : &~[~str] = &key_arrays[i];
-                let key_ref_array : ~[&str] = key_array.iter().map(|k| k.as_slice()).to_owned_vec();
-                let ref_of_key_ref_array : &[&str] = key_ref_array.as_slice();
+                let key_array = vec![];
+                let key_ref_array = key_array.iter().map(|k| k.as_slice()).to_owned_vec();
+                let ref_of_key_ref_array = key_ref_array.as_slice();
                 let conn = self.get_connection(i);
                 let conn_result = conn.p_gets(ref_of_key_ref_array);
                 result.push_all_move(conn_result);
@@ -280,27 +280,27 @@ impl RustyMem {
     }
 
     /// Get the list of data as bytes of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_bytes(&mut self, keys: &[&str]) -> ~[(~str, ~[u8])] {
+    pub fn get_bulk_bytes(&mut self, keys: &[&str]) -> Box<[(Box<str>, Box<[u8]>)]> {
         let md_list = self.get_bulk_data(keys);
-        return md_list.iter().map(|md| ( md.key.clone(), md.as_bytes() ) ).collect::<~[(~str, ~[u8])]>();
+        return md_list.iter().map(|md| ( md.key.clone(), md.as_bytes() ) ).collect::<Box<[(Box<str>, Box<[u8]>)]>>();
     }
 
     /// Get the list of data as str of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_str(&mut self, keys: &[&str]) -> ~[(~str, ~str)] {
+    pub fn get_bulk_str(&mut self, keys: &[&str]) -> Box<[(Box<str>, Box<str>)]> {
         let md_list = self.get_bulk_data(keys);
-        return md_list.iter().map(|md| ( md.key.clone(), md.as_str() ) ).collect::<~[(~str, ~str)]>();
+        return md_list.iter().map(|md| ( md.key.clone(), md.as_str() ) ).collect::<Box<[(Box<str>, Box<str>)]>>();
     }
 
     /// Get the list of data value from string of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_as<T: FromStr>(&mut self, keys: &[&str]) -> ~[(~str, Option<T>)] {
+    pub fn get_bulk_as<T: FromStr>(&mut self, keys: &[&str]) -> Box<[(Box<str>, Option<T>)]> {
         let md_list = self.get_bulk_data(keys);
-        return md_list.iter().map(|md| ( md.key.clone(), md.as_type::<T>() ) ).collect::<~[(~str, Option<T>)]>();
+        return md_list.iter().map(|md| ( md.key.clone(), md.as_type::<T>() ) ).collect::<Box<[(Box<str>, Option<T>)]>>();
     }
 
     /// Get the list of data as Json of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_json(&mut self, keys: &[&str]) -> ~[(~str, Result<Json, json::Error>)] {
+    pub fn get_bulk_json(&mut self, keys: &[&str]) -> Box<[(Box<str>, Result<Json, json::Error>)]> {
         let md_list = self.get_bulk_data(keys);
-        return md_list.iter().map(|md| ( md.key.clone(), md.as_json() ) ).collect::<~[(~str, Result<Json, json::Error>)]>();
+        return md_list.iter().map(|md| ( md.key.clone(), md.as_json() ) ).collect::<Box<[(Box<str>, Result<Json, json::Error>)]>>();
     }
 
 
@@ -327,51 +327,51 @@ impl RustyMem {
     }
 
 
-    pub fn flush(&mut self, delay_in_seconds: uint) -> ~[MemStatus] {
+    pub fn flush(&mut self, delay_in_seconds: uint) -> Box<[MemStatus]> {
         return self.connections.mut_iter().map( |conn| {
                 conn.p_flush(delay_in_seconds, false)
-            } ).collect::<~[MemStatus]>();
+            } ).collect::<Box<[MemStatus]>>();
     }
 
-    pub fn verbosity(&mut self, verbosity: u32) -> ~[MemStatus] {
+    pub fn verbosity(&mut self, verbosity: u32) -> Box<[MemStatus]> {
         return self.connections.mut_iter().map( |conn| {
                 conn.p_verbosity(verbosity, false)
-            } ).collect::<~[MemStatus]>();
+            } ).collect::<Box<[MemStatus]>>();
     }
 
-    pub fn stats(&mut self) -> ~[~[MemcachedStat]] {
+    pub fn stats(&mut self) -> Box<[Box<[MemcachedStat]>]> {
         return self.connections.mut_iter().map( |conn| {
                 conn.p_stats()
-            } ).collect::<~[~[MemcachedStat]]>();
+            } ).collect::<Box<[Box<[MemcachedStat]>]>>();
     }
 
-    pub fn quit(&mut self) -> ~[MemStatus] {
+    pub fn quit(&mut self) -> Box<[MemStatus]> {
         return self.connections.mut_iter().map( |conn| {
                 conn.p_quit()
-            } ).collect::<~[MemStatus]>();
+            } ).collect::<Box<[MemStatus]>>();
     }
 
 
-    pub fn versions(&mut self) -> ~[~str] {
+    pub fn versions(&mut self) -> Box<[Box<str>]> {
         return self.connections.mut_iter().map( |conn| {
                 match conn.p_version() {
                     Ok(v)  => v,
                     Err(e) => e
                 }
-            } ).collect::<~[~str]>();
+            } ).collect::<Box<[Box<str>]>>();
     }
 
     pub fn get_connection_count(&self) -> uint {
         return self.connections.len();
     }
 
-    pub fn get_connection<'a>(&'a mut self, index: uint) -> &'a mut ~ProtoConnection {
+    pub fn get_connection<'a>(&'a mut self, index: uint) -> &'a mut Box<ProtoConnection> {
         return &mut self.connections[index];
     }
 
 
     // Pick a connection based on key value.  Simple hash % N algorithm for now.
-    fn conn<'r>(&'r mut self, key: &str) -> &'r mut ~ProtoConnection {
+    fn conn<'r>(&'r mut self, key: &str) -> &'r mut Box<ProtoConnection> {
         let mut index;
         if self.get_connection_count() == 1 {
             index = 0;
@@ -398,8 +398,8 @@ impl RustyMem {
 
     // Distribute the keys to N partitions according to its indexer function.
     // Build a key array for each partition for the belonging keys.
-    fn distribute_keys(keys: &[&str], partition_count: uint, indexer: &fn(&str, uint)->uint) -> ~[~[~str]] {
-        let mut array_of_keys_for_partition : ~[~[~str]] = vec::from_elem::<~[~str]>(partition_count, ~[]);
+    fn distribute_keys(keys: &[&str], partition_count: uint, indexer: &fn(&str, uint)->uint) -> Box<[Box<[Box<str>]>]> {
+        let mut array_of_keys_for_partition = vec::from_elem(partition_count, vec![]);
 
         // if partition_count == 1 {
         //     let array_at_index = &mut array_of_keys_for_partition[0];
@@ -408,7 +408,7 @@ impl RustyMem {
         //     array_at_index.push(key);
         // }
 
-        let connection_index_of_key : ~[uint] = keys.iter().map(|key| indexer(*key, partition_count)).collect::<~[uint]>();
+        let connection_index_of_key = keys.iter().map(|key| indexer(*key, partition_count)).collect::<Box<[uint]>>();
         for i in range(0, partition_count) {
             let index = connection_index_of_key[i];
             let key = keys[i].to_owned();
@@ -428,7 +428,7 @@ impl RustyMem {
 
 
 pub struct MemParams {
-    servers:    ~str,
+    servers:    Box<str>,
     protocol:   MemProtocol,
     shard:      ShardMethod
 }
@@ -475,7 +475,7 @@ pub enum MemStatus {
 }
 
 impl MemStatus {
-    pub fn ascii_to_status(r : Result<~str, ~str>) -> MemStatus {
+    pub fn ascii_to_status(r : Result<Box<str>, Box<str>>) -> MemStatus {
         match r {
             Ok(s)   => { 
                     let tokens = strutil::clean_split(s, ' ');  
@@ -539,9 +539,9 @@ pub struct MemResult<T> {
 /// The returned result of the Get query from Memcached.
 pub struct MemData {
     /// Key of the returned data
-    key:        ~str,
+    key:        Box<str>,
     /// The returned data
-    data:       ~[u8],
+    data:       Box<[u8]>,
     /// The CAS value for the next cas operation to ensure no one has changed the data in the memcached server
     cas:        u64,
     /// Flags associated with the data.
@@ -550,17 +550,17 @@ pub struct MemData {
 
 impl MemData {
     /// Return pointer to the retrieved data bytes.
-    pub fn as_data_ptr<'a>(&'a self) -> &'a ~[u8] {
+    pub fn as_data_ptr<'a>(&'a self) -> &'a Box<[u8]> {
         return &self.data;
     }
 
     // Return the retrieved data as cloned bytes
-    pub fn as_bytes(&self) -> ~[u8] {
+    pub fn as_bytes(&self) -> Box<[u8]> {
         return self.data.clone();
     }
 
     /// Return the retrieved data as str
-    pub fn as_str(&self) -> ~str {
+    pub fn as_str(&self) -> Box<str> {
         return str::from_utf8(self.data);
     }
 
@@ -591,7 +591,7 @@ impl MemData {
 }
 
 impl ToStr for MemData {
-    fn to_str(&self) -> ~str {
+    fn to_str(&self) -> Box<str> {
         return str::from_utf8(self.data);
     }
 }
@@ -600,7 +600,7 @@ impl ToStr for MemData {
 
 /// Stat result entry for the stats query
 pub struct MemcachedStat {
-    name:       ~str,
-    value:      ~str
+    name:       Box<str>,
+    value:      Box<str>
 }
 

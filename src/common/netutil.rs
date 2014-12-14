@@ -24,7 +24,7 @@ use super::strutil;
 
 
 /// Parse the "host:port" string, with support for default_port.
-pub fn to_host_port(host_port_str: &str, default_port : u16) -> (~str, u16) {
+pub fn to_host_port(host_port_str: &str, default_port : u16) -> (Box<str>, u16) {
     let tokens = strutil::clean_split(host_port_str, ':');
     match tokens.len() {
         0   => fail!( fmt!("Fail to %?", host_port_str) ),
@@ -38,7 +38,7 @@ pub fn to_host_port(host_port_str: &str, default_port : u16) -> (~str, u16) {
 /// Structure for holding, parsing, and formating hostname and port net address.
 pub struct HostAddr {
     /// The hostname or ip address
-    host:       ~str,
+    host:       Box<str>,
 
     /// The port number
     port:       Option<u16>,
@@ -62,7 +62,7 @@ impl HostAddr {
         };
     }
 
-    pub fn get_host(&self) -> ~str {
+    pub fn get_host(&self) -> Box<str> {
         self.host.clone()
     }
 
@@ -89,7 +89,7 @@ impl HostAddr {
 }
 
 impl ToStr for HostAddr {
-    fn to_str(&self) -> ~str {
+    fn to_str(&self) -> Box<str> {
         match self.port {
             Some(port) => fmt!("%s:%s", self.host, port.to_str()),
             None => self.host.clone(),

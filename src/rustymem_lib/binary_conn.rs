@@ -199,11 +199,11 @@ impl ProtoConnection for BinaryConnection {
 
     //// Retrieval command
 
-    fn p_get(&mut self, keys: &[&str]) -> ~[MemData] {
+    fn p_get(&mut self, keys: &[&str]) -> Box<[MemData]> {
         return self.p_gets(keys);
     }
 
-    fn p_gets(&mut self, keys: &[&str]) -> ~[MemData] {
+    fn p_gets(&mut self, keys: &[&str]) -> Box<[MemData]> {
 
         // Return dummy data to cut out network access, for benchmarking.
         // if true {
@@ -233,7 +233,7 @@ impl ProtoConnection for BinaryConnection {
         self.write_header(&header);
         self.write_data(body);
 
-        let mut mdata_list = ~[];
+        let mut mdata_list = vec!();
         loop {
             self.read_header(&mut header);
             debug!( fmt!("  res: %?", header) );
@@ -261,7 +261,7 @@ impl ProtoConnection for BinaryConnection {
 
     //// Other commands
 
-    fn p_version(&mut self) -> Result<~str, ~str> {
+    fn p_version(&mut self) -> Result<Box<str>, Box<str>> {
         let mut header: PacketHeader = BinaryConnection::new_req_header(BP_OP_Version, 0, 0, 0, 0);
         debug!( fmt!("  req: %?", header) );
         self.write_header(&header);
@@ -305,13 +305,13 @@ impl ProtoConnection for BinaryConnection {
         return MemStatus::map_status(header.status_vbucket);
     }
 
-    fn p_stats(&mut self) -> ~[MemcachedStat] {
+    fn p_stats(&mut self) -> Box<MemcachedStat> {
         let mut header = BinaryConnection::new_req_header(BP_OP_Stat, 0, 0, 0, 0);
         debug!( fmt!("  req: %?", header) );
 
         self.write_header(&header);
 
-        let mut stats : ~[MemcachedStat] = ~[];
+        let mut stats = vec!();
         loop {
             self.read_header(&mut header);
             //debug!( fmt!("  res: %?", header) );
@@ -340,7 +340,7 @@ impl ProtoConnection for BinaryConnection {
     }
 
     // Server config
-    fn p_get_server_addr(&self) -> ~str {
+    fn p_get_server_addr(&self) -> Box<str> {
         return self.server_addr.to_str();
     }
 
@@ -479,7 +479,7 @@ impl BinaryConnection {
         self.stream.read(buf);
     }
 
-    fn read_upto(&mut self, len_to_read: uint) -> ~[u8] {
+    fn read_upto(&mut self, len_to_read: uint) -> Box<[u8]> {
         let mut buf = vec::from_elem(len_to_read, 0u8);
         self.read_buf_upto(buf, 0, len_to_read);
         return buf;

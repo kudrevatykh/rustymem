@@ -69,16 +69,16 @@ pub trait ProtoConnection {
     //// Retrieval command
 
     // Retrieve multiple data at the corresponding keys.
-    fn p_get(&mut self, key: &[&str]) -> ~[MemData];
+    fn p_get(&mut self, key: &[&str]) -> Box<MemData>;
 
     // Retrieve multiple data at the corresponding keys.
-    fn p_gets(&mut self, keys: &[&str]) -> ~[MemData];
+    fn p_gets(&mut self, keys: &[&str]) -> Box<MemData>;
 
 
     //// Other commands
 
     // Get the version string of the server
-    fn p_version(&mut self) -> Result<~str, ~str>;
+    fn p_version(&mut self) -> Result<Box<str>, Box<str>>;
 
     // Set the verbosity level of the logging output at the server
     fn p_verbosity(&mut self, verbosity: u32, noreply: bool) -> MemStatus;
@@ -87,14 +87,14 @@ pub trait ProtoConnection {
     fn p_flush(&mut self, delay_in_seconds: uint, noreply: bool) -> MemStatus;
 
     // Return all server statistics
-    fn p_stats(&mut self) -> ~[MemcachedStat];
+    fn p_stats(&mut self) -> Box<[MemcachedStat]>;
 
     // Server closes the connection from client.
     fn p_quit(&mut self) -> MemStatus;
 
 
     // Server config
-    fn p_get_server_addr(&self) -> ~str;
+    fn p_get_server_addr(&self) -> Box<str>;
 
 }
 
