@@ -88,8 +88,8 @@ impl HostAddr {
 
 }
 
-impl ToStr for HostAddr {
-    fn to_str(&self) -> Box<str> {
+impl ToString for HostAddr {
+    fn to_string(&self) -> String {
         match self.port {
             Some(port) => format!("{}:{}", self.host, port.to_str()),
             None => self.host.clone(),

@@ -17,7 +17,7 @@
 use std::str::CharEq;
 //use std::int;
 //use std::to_str;
-//use std::from_str;
+use std::str::FromStr;
 
 
 pub fn to_num<T: FromStr>(s : &str, default_value : T) -> T {

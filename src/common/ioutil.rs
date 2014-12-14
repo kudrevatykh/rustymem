@@ -16,6 +16,7 @@
 
 
 use std::vec;
+use std::slice::bytes;
 
 
 /// Platform independent, language independent way of packing data into byte buffer
@@ -95,7 +96,7 @@ pub fn pack_str(buf: &mut [u8], offset: uint, str_value: &str) -> uint {
 pub fn copy_bytes(to_buf: &mut [u8],  to_offset: uint,  from_buf: &[u8],  from_offset: uint,  len: uint) -> uint {
     let to_slice = to_buf.mut_slice(to_offset, to_offset + len);
     let from_slice = from_buf.slice(from_offset, from_offset + len);
-    vec::bytes::copy_memory(to_slice, from_slice, len);
+    bytes::copy_memory(to_slice, from_slice, len);
     to_offset + len
 }
 
