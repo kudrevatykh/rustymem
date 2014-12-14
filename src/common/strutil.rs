@@ -46,16 +46,16 @@ pub fn clean_split<Sep: CharEq>(s : &str, seperator: Sep) -> Box<[&str]> {
 
 #[test]
 fn test_to_num() {
-    println( fmt!("%?", from_str::<int>("28")) );
-    println( fmt!("%?", to_num("9000", 1234)) );
-    println( fmt!("%?", to_num("123", 1234)) );
-    println( fmt!("%?", to_num("abc", 1234)) );
+    println!("{}", from_str::<int>("28"));
+    println!("{}", to_num("9000", 1234));
+    println!("{}", to_num("123", 1234));
+    println!("{}", to_num("abc", 1234));
 }
 
 #[test]
 fn test_clean_split() {
-    println( fmt!("%?", clean_split("a.b.c", '.')) );
-    println( fmt!("%?", clean_split("a.123.c", '.')) );
-    println( fmt!("%?", clean_split(" a :123.c ", ':')) );
+    println!("{}", clean_split("a.b.c", '.'));
+    println!("{}", clean_split("a.123.c", '.'));
+    println!("{}", clean_split(" a :123.c ", ':'));
 }
 

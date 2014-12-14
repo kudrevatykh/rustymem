@@ -150,7 +150,7 @@ impl ProtoConnection for BinaryConnection {
     fn p_touch(&mut self, key: &str, exptime: uint, _ /*noreply*/: bool) -> MemStatus {
         let key_bytes = key.as_bytes();
         let mut header = BinaryConnection::new_req_header(BP_OP_Touch, key_bytes.len() as u16, 4u8, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
@@ -161,9 +161,9 @@ impl ProtoConnection for BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
 
         return MemStatus::map_status(header.status_vbucket);
     }
@@ -180,7 +180,7 @@ impl ProtoConnection for BinaryConnection {
     fn p_delete(&mut self, key: &str, _ /*noreply*/: bool) -> MemStatus {
         let key_bytes = key.as_bytes();
         let mut header = BinaryConnection::new_req_header(BP_OP_Delete, key_bytes.len() as u16, 0, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
@@ -189,9 +189,9 @@ impl ProtoConnection for BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
 
         return MemStatus::map_status(header.status_vbucket);
     }
@@ -213,7 +213,7 @@ impl ProtoConnection for BinaryConnection {
         for i in range(0, keys.len() - 1) {
             let key_bytes = keys[i].as_bytes();
             let header = BinaryConnection::new_req_header(BP_OP_GetKQ, key_bytes.len() as u16, 0, 0, 0);
-            debug!( fmt!("  req: %?", header) );
+            debug!("  req: {}", header);
 
             let mut body = vec::from_elem(header.body_len as uint, 0u8);
             ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
@@ -225,7 +225,7 @@ impl ProtoConnection for BinaryConnection {
         let i = keys.len() - 1;
         let key_bytes = keys[i].as_bytes();
         let mut header = BinaryConnection::new_req_header(BP_OP_GetK, key_bytes.len() as u16, 0, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
@@ -236,7 +236,7 @@ impl ProtoConnection for BinaryConnection {
         let mut mdata_list = vec!();
         loop {
             self.read_header(&mut header);
-            debug!( fmt!("  res: %?", header) );
+            debug!("  res: {}", header);
             let extra   = self.read_upto(header.extra_len as uint);
             let key     = self.read_upto(header.key_len as uint);
             let data    = self.read_upto(header.get_data_len());
@@ -263,17 +263,17 @@ impl ProtoConnection for BinaryConnection {
 
     fn p_version(&mut self) -> Result<Box<str>, Box<str>> {
         let mut header: PacketHeader = BinaryConnection::new_req_header(BP_OP_Version, 0, 0, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
         self.write_header(&header);
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
         Ok(str::from_utf8(buf))
     }
 
     fn p_verbosity(&mut self, verbosity: u32, _ /*noreply*/: bool) -> MemStatus {
         let mut header = BinaryConnection::new_req_header(BP_OP_Verbosity, 0, 4u8, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = [0u8, ..4];
         ioutil::pack_u32_be(body, 0, verbosity);
@@ -282,16 +282,16 @@ impl ProtoConnection for BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
 
         return MemStatus::map_status(header.status_vbucket);
     }
 
     fn p_flush(&mut self, delay_in_seconds: uint, _ /*noreply*/: bool) -> MemStatus {
         let mut header = BinaryConnection::new_req_header(BP_OP_Flush, 0, 4u8, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = [0u8, ..4];
         ioutil::pack_u32_be(body, 0, delay_in_seconds as u32);
@@ -300,27 +300,27 @@ impl ProtoConnection for BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
 
         return MemStatus::map_status(header.status_vbucket);
     }
 
     fn p_stats(&mut self) -> Box<MemcachedStat> {
         let mut header = BinaryConnection::new_req_header(BP_OP_Stat, 0, 0, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         self.write_header(&header);
 
         let mut stats = vec!();
         loop {
             self.read_header(&mut header);
-            //debug!( fmt!("  res: %?", header) );
+            debug!("  res: {}", header);
             if header.key_len == 0 && header.get_data_len() == 0 {
                 break;
             }
             let name  = self.read_upto(header.key_len as uint);
             let value = self.read_upto(header.get_data_len());
-            //debug!( fmt!("  stat: %? = %?", str::from_utf8(name), str::from_utf8(value)) );
+            debug!("  stat: {} = {}", str::from_utf8(name), str::from_utf8(value));
             stats.push(MemcachedStat {
                     name:   str::from_utf8(name),
                     value:  str::from_utf8(value)
@@ -332,10 +332,10 @@ impl ProtoConnection for BinaryConnection {
 
     fn p_quit(&mut self) -> MemStatus {
         let mut header = BinaryConnection::new_req_header(BP_OP_Quit, 0, 0, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
         self.write_header(&header);
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         return MemStatus::map_status(header.status_vbucket);
     }
 
@@ -355,7 +355,7 @@ impl BinaryConnection {
 
         let stream = TcpStream::connect(server_addr.get_sock_addr());
         if stream.is_none() {
-            fail!("connect() failed")
+            panic!("connect() failed")
         }
 
         return BinaryConnection {
@@ -368,7 +368,7 @@ impl BinaryConnection {
     fn bc_store_cmd(&mut self,  opcode: u8,  key: &str,  data: &[u8], cas: u64,  flags: u32,  exptime: uint,  _ /*noreply*/: bool) -> MemResult<u64> {
         let key_bytes = key.as_bytes();
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 4u8 + 4, data.len(), cas);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
@@ -381,9 +381,9 @@ impl BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
 
         return MemResult::<u64> {
             status:     MemStatus::map_status(header.status_vbucket),
@@ -394,7 +394,7 @@ impl BinaryConnection {
     fn bc_append_cmd(&mut self,  opcode: u8,  key: &str,  data: &[u8], _ /*noreply*/: bool) -> MemResult<u64> {
         let key_bytes = key.as_bytes();
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 0, data.len(), 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
@@ -405,9 +405,9 @@ impl BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
 
         return MemResult::<u64> {
             status:     MemStatus::map_status(header.status_vbucket),
@@ -418,7 +418,7 @@ impl BinaryConnection {
     fn bc_inc_cmd(&mut self,  opcode: u8,  key: &str,  exptime: uint,  inc_amount: u64, init_value: u64,  _ /*noreply*/: bool) -> MemResult<u64> {
         let key_bytes = key.as_bytes();
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 8u8 + 8 + 4, 0, 0);
-        debug!( fmt!("  req: %?", header) );
+        debug!("  req: {}", header);
 
         let mut body = vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
@@ -431,9 +431,9 @@ impl BinaryConnection {
         self.write_data(body);
 
         self.read_header(&mut header);
-        debug!( fmt!("  res: %?", header) );
+        debug!("  res: {}", header);
         let buf = self.read_upto(header.get_data_len());
-        debug!( fmt!("  data: %?", str::from_utf8(buf)) );
+        debug!("  data: {}", str::from_utf8(buf));
         let new_value = if buf.len() == 8 && header.status_vbucket == 0 { ioutil::unpack_u64_be(buf, 0) } else { 0 };
 
         return MemResult::<u64> {
@@ -459,14 +459,14 @@ impl BinaryConnection {
     }
 
     fn write_data(&mut self, data: &[u8]) {
-        //debug!( fmt!("write data: %?", data) );
+        //debug!("write data: {}", data);
         self.stream.write(data);
     }
 
     fn write_header(&mut self, header: &PacketHeader) {
         let mut buf = [0u8, ..BP_HEADER_SIZE];
         header.pack(buf, 0);
-        //debug!( fmt!("req buf: %?", buf) );
+        //debug!("req buf: {}", buf);
         self.write_data(buf);
     }
 

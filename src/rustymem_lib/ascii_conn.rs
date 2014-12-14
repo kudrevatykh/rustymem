@@ -165,7 +165,7 @@ impl ProtoConnection for AsciiConnection {
     //// Other commands
 
     fn p_version(&mut self) -> Result<Box<str>, Box<str>> {
-        self.ascii_write_data(bytes!("version\r\n"));
+        self.ascii_write_data(b"version\r\n");
         return self.ascii_read_line();
     }
 
@@ -180,12 +180,12 @@ impl ProtoConnection for AsciiConnection {
     }
 
     fn p_stats(&mut self) -> Box<[MemcachedStat]> {
-        self.ascii_write_data(bytes!("stats\r\n"));
+        self.ascii_write_data(b"stats\r\n");
 
         let mut stats = vec!();
         loop {
             let stat_line = self.ascii_read_line().unwrap();
-            //debug!( fmt!("stat_line: %?", stat_line) );
+            debug!("stat_line: {}", stat_line);
             let tokens = strutil::clean_split(stat_line, ' ');
             match tokens[0] {
                 "STAT" if tokens.len() >= 3  => {
@@ -224,32 +224,32 @@ impl AsciiConnection {
 
         let stream = TcpStream::connect(server_addr.get_sock_addr());
         if stream.is_none() {
-            fail!("connect() failed")
+            panic!("connect() failed")
         }
-        //debug!( fmt!("stream = %?", stream) );
+        debug!("stream = {}", stream);
 
         //let mut stream = BufferedStream::new(stream);
-        //debug!( fmt!("bstream = %?", bstream) );
+        //debug!("bstream = {}", bstream);
 
         // let bwriter = BufferedWriter::new(stream);
-        // debug!( fmt!("bwriter = %?", bwriter) );
+        // debug!("bwriter = {}", bwriter);
 
         // let breader = BufferedReader::new(stream);
-        // debug!( fmt!("breader = %?", breader) );
+        // debug!("breader = {}", breader);
         
-        // self.writer = Some(self.stream as ~WriterUtil);
-        // self.reader = Some(self.stream as ~ReaderUtil);
+        // self.writer = Some(self.stream as Box<WriterUtil>);
+        // self.reader = Some(self.stream as <ReaderUtil>);
 
-        //let reader = stream as ~std::rt::io::extensions::ReaderUtil;
+        //let reader = stream as Box<std::rt::io::extensions::ReaderUtil>;
 
-        //let reader = ~stream as ~std::rt::io::Reader;
-        //let writer = ~stream as ~std::rt::io::Writer;
+        //let reader = box stream as Box<std::rt::io::Reader>;
+        //let writer = box stream as Box<std::rt::io::Writer>;
 
         return AsciiConnection {
             server_addr:    server_addr,
             stream:         stream,
             // reader:         BufferedReader::new(stream),
-            // writer:         ~stream as ~WriterUtil,
+            // writer:         box stream as Box<WriterUtil>,
         };
 
     }
@@ -268,10 +268,10 @@ impl AsciiConnection {
     }
 
     fn ascii_send_store_request(&mut self, request: &str, data: &[u8], noreply: bool) -> MemStatus {
-        debug!(request);
+        debug!("{}", request);
         self.ascii_write_data(request.as_bytes());
         self.ascii_write_data(data);
-        self.ascii_write_data(bytes!("\r\n"));
+        self.ascii_write_data(b"\r\n");
         if noreply {
             Success
         } else {
@@ -281,7 +281,7 @@ impl AsciiConnection {
     }
 
     fn ascii_send_simple_request(&mut self, request: &str, noreply: bool) -> MemStatus {
-        debug!(request);
+        debug!("{}", request);
         self.ascii_write_data(request.as_bytes());
         if noreply {
             Success
@@ -292,14 +292,14 @@ impl AsciiConnection {
     }
 
     fn ascii_send_get_request(&mut self, request: &str) -> Box<[MemData]> {
-        debug!(request);
+        debug!("{}", request);
         self.ascii_write_data(request.as_bytes());
 
         let mut mdata_list = vec!();
         let mut dummy = [0u8, ..2];
         loop {
             let value_line = self.ascii_read_line().unwrap();
-            //debug!( fmt!("value_line: %?", value_line) );
+            debug!( "value_line: {}", value_line);
             let tokens = strutil::clean_split(value_line, ' ');
             match tokens[0] {
                 "VALUE" if tokens.len() >= 4  => {
@@ -312,7 +312,7 @@ impl AsciiConnection {
                     };
                     self.stream.read(mdata.data);
                     self.stream.read(dummy);
-                    //debug!( fmt!("mdata: %?", mdata) );
+                    debug!("mdata: {}", mdata);
                     mdata_list.push(mdata);
                 },
                 "END"   =>  break,

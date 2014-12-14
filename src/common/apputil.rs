@@ -21,7 +21,7 @@
 pub fn get_program(args: &Box<[Box<str>]>) -> Box<str> {
     let path : Path = GenericPath::from_str((*args)[0]);
     let name = path.filestem();
-    debug!( fmt!("name = %?", name) );
+    debug!("name = {}", name);
 
     match name {
         Some(name) => { name.to_owned() },

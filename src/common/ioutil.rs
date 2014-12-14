@@ -116,38 +116,38 @@ pub fn trunc_bytes(bytes: &[u8]) -> u32 {
 
 #[test]
 fn test() {
-    //println( fmt!("%?", clean_split("a.b.c", '.')) );
+    //println!( "{}", clean_split("a.b.c", '.'));
     let mut buf = vec::from_elem(32, 0u8);
     let mut offset;
 
     offset = pack_u8_be(buf, 0, 1);
     offset = pack_u8_be(buf, offset, 2);
-    println( fmt!("%? %?", buf, offset) );
+    println!("{} {}", buf, offset);
 
     offset = pack_u16_be(buf, 0, 0x0102);
-    println( fmt!("%? %?", buf, offset) );
+    println!("{} {}", buf, offset);
 
     offset = pack_str(buf, offset, "ABCD");
-    println( fmt!("%? %?", buf, offset) );
+    println!("{} {}", buf, offset);
 
     offset = pack_u16_be(buf, 0, 12345);
-    println( fmt!("%? %?", buf, offset) );
-    println( fmt!("%? %?", unpack_u16_be(buf, 0), offset) );
+    println!("{} {}", buf, offset);
+    println!("{} {}", unpack_u16_be(buf, 0), offset);
 
     offset = pack_u32_be(buf, 0, 12345678);
-    println( fmt!("%? %?", buf, offset) );
-    println( fmt!("%? %?", unpack_u32_be(buf, 0), offset) );
+    println!("{} {}", buf, offset);
+    println!("{} {}", unpack_u32_be(buf, 0), offset);
 
     offset = pack_u64_be(buf, 0, 12345678901234);
-    println( fmt!("%? %?", buf, offset) );
-    println( fmt!("%? %?", unpack_u64_be(buf, 0), offset) );
+    println!("{} {}", buf, offset);
+    println!("{} {}", unpack_u64_be(buf, 0), offset);
 
     pack_u64_be(buf, 0, 0);
-    println( fmt!("%? %?", fold_bytes(buf), buf) );
+    println!("{} {}", fold_bytes(buf), buf);
     pack_u64_be(buf, 0, 1);
-    println( fmt!("%? %?", fold_bytes(buf), buf) );
+    println!("{} {}", fold_bytes(buf), buf);
     pack_u64_be(buf, 0, 0x0000000100000002);
-    println( fmt!("%? %?", fold_bytes(buf), buf) );
+    println!("{} {}", fold_bytes(buf), buf);
 
 }
 

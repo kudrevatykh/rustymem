@@ -27,7 +27,7 @@ use super::strutil;
 pub fn to_host_port(host_port_str: &str, default_port : u16) -> (Box<str>, u16) {
     let tokens = strutil::clean_split(host_port_str, ':');
     match tokens.len() {
-        0   => fail!( fmt!("Fail to %?", host_port_str) ),
+        0   => panic!("Fail to {}", host_port_str),
         1   => (tokens[0].to_owned(), default_port),
         _   => (tokens[0].to_owned(), strutil::to_num(tokens[1], default_port))
     }
@@ -91,7 +91,7 @@ impl HostAddr {
 impl ToStr for HostAddr {
     fn to_str(&self) -> Box<str> {
         match self.port {
-            Some(port) => fmt!("%s:%s", self.host, port.to_str()),
+            Some(port) => format!("{}:{}", self.host, port.to_str()),
             None => self.host.clone(),
         }
     }
@@ -102,15 +102,15 @@ impl ToStr for HostAddr {
 #[test]
 fn test_to_host_port()  {
 
-    println( fmt!("%?", to_host_port("localhost: 9000", 1234)) );
-    println( fmt!("%?", to_host_port("localhost:9000", 1234)) );
-    println( fmt!("%?", to_host_port(" localhost:9000", 1234)) );
-    println( fmt!("%?", to_host_port(" localhost : 9000 ", 1234)) );
-    println( fmt!("%?", to_host_port("localhost : 9000 ", 1234)) );
-    println( fmt!("%?", to_host_port("localhost ", 1111)) );
-    println( fmt!("%?", to_host_port(" localhost ", 2222)) );
-    println( fmt!("%?", to_host_port(" localhost: ", 3333)) );
-    println( fmt!("%?", to_host_port(" localhost:abc ", 4444)) );
+    println!("{}", to_host_port("localhost: 9000", 1234));
+    println!("{}", to_host_port("localhost:9000", 1234));
+    println!("{}", to_host_port(" localhost:9000", 1234));
+    println!("{}", to_host_port(" localhost : 9000 ", 1234));
+    println!("{}", to_host_port("localhost : 9000 ", 1234));
+    println!("{}", to_host_port("localhost ", 1111));
+    println!("{}", to_host_port(" localhost ", 2222));
+    println!("{}", to_host_port(" localhost: ", 3333));
+    println!("{}", to_host_port(" localhost:abc ", 4444));
 
 }
 

@@ -3,6 +3,8 @@
        uuid = "d491af7a-32d3-48dc-9507-d2c9fbd1263b")];
 #[crate_type = "lib"];
 
+#![feature(phase)]
+#[phase(plugin, link)] extern crate log;
 
 /******************************************************************************
  * RustyMem, a Memcached client library in Rust.
@@ -82,12 +84,12 @@ pub fn connect(server_addrs: &str) -> RustyMem  {
 /// Pass in the Memcached protocol to use.  Note: all servers need to support the same protocol.
 /// connect_with( MemParams { servers: ~"127.0.0.1", protocol: P_BINARY, shard: HASH_MOD } )
 pub fn connect_with(params: MemParams) -> RustyMem  {
-    debug!( fmt!("connect_with() enter, %?", params) );
+    debug!("connect_with() enter, {}", params);
 
     let addrs = strutil::clean_split(params.servers, ' ');
     let connections = addrs.iter().map( |addr| new_protocol_connection(*addr, params.protocol) ).collect::<Box<[Box<ProtoConnection>]>>();
     let conn_addrs = connections.iter().map( |conn| conn.p_get_server_addr() ).collect::<Box<[Box<str>]>>();
-    debug!( fmt!("server_addrs : %?", conn_addrs) );
+    debug!("server_addrs : {}", conn_addrs);
 
     RustyMem {
         params: params,
