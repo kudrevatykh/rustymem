@@ -29,7 +29,6 @@ use super::super::MemStatus;
 use super::super::MemResult;
 use super::super::MemData;
 use super::super::MemcachedStat;
-use super::super::Success;
 
 
 use super::proto::ProtoConnection;
@@ -273,7 +272,7 @@ impl AsciiConnection {
         self.ascii_write_data(data);
         self.ascii_write_data(b"\r\n");
         if noreply {
-            Success
+            MemStatus::Success
         } else {
             //return self.ascii_read_line();
             MemStatus::ascii_to_status(self.ascii_read_line())
@@ -284,7 +283,7 @@ impl AsciiConnection {
         debug!("{}", request);
         self.ascii_write_data(request.as_bytes());
         if noreply {
-            Success
+            MemStatus::Success
         } else {
             //return self.ascii_read_line();
             MemStatus::ascii_to_status(self.ascii_read_line())
