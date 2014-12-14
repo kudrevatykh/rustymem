@@ -16,7 +16,7 @@
 
 
 use std::result::Result;
-use std::vec;
+use collections::vec::Vec;
 use std::io::net::tcp::TcpStream;
 use std::io::{Reader, Writer};
 
@@ -39,9 +39,9 @@ use super::proto::ProtoConnection;
 //
 
 
-static CR: u8   = '\r' as u8;
-static LF: u8   = '\n' as u8;
-static SP: u8   = ' '  as u8;
+const CR: u8   = '\r' as u8;
+const LF: u8   = '\n' as u8;
+const SP: u8   = ' '  as u8;
 
 
 /// Struct for one memcached server
@@ -307,7 +307,7 @@ impl AsciiConnection {
                         key:        tokens[1].to_owned(),
                         flags:      from_str::<u32>(tokens[2]).unwrap(),
                         cas:        if tokens.len() >= 5 { from_str::<u64>(tokens[4]).unwrap() } else { 0u64 },
-                        data:       vec::from_elem(bytes as uint, 0u8)
+                        data:       Vec::from_elem(bytes as uint, 0u8)
                     };
                     self.stream.read(mdata.data);
                     self.stream.read(dummy);
