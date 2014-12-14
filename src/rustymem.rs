@@ -28,12 +28,14 @@
 
 
 extern crate serialize;
+extern crate collections;
 extern crate rustc;
 
 use std::result::Result;
 use std::str;
+use std::str::FromStr;
 use std::string::ToString;
-use std::vec;
+use collections::vec::Vec;
 use serialize::json;
 use serialize::json::Json;
 use serialize::json::ToJson;
@@ -76,7 +78,7 @@ static DEFAULT_PORT : u16   = 11211u16; // default Memcached server port
 /// connect("127.0.0.1 127.0.0.2:11212 127.0.0.3:11213");
 pub fn connect(server_addrs: &str) -> RustyMem  {
     // defaul to use the newer binary protocol.
-    return connect_with( MemParams { servers: server_addrs.to_owned(), protocol: P_BINARY, shard: HASH_MOD } );
+    return connect_with( MemParams { servers: server_addrs.to_owned(), protocol: MemProtocol::P_BINARY, shard: ShardMethod::HASH_MOD } );
 }
 
 
@@ -300,9 +302,9 @@ impl RustyMem {
     }
 
     /// Get the list of data as Json of the list of keys.  Return empty list if no data found or error.
-    pub fn get_bulk_json(&mut self, keys: &[&str]) -> Box<[(Box<str>, Result<Json, json::Error>)]> {
+    pub fn get_bulk_json(&mut self, keys: &[&str]) -> Box<[(Box<str>, Result<Json, json::BuilderError>)]> {
         let md_list = self.get_bulk_data(keys);
-        return md_list.iter().map(|md| ( md.key.clone(), md.as_json() ) ).collect::<Box<[(Box<str>, Result<Json, json::Error>)]>>();
+        return md_list.iter().map(|md| ( md.key.clone(), md.as_json() ) ).collect::<Box<[(Box<str>, Result<Json, json::BuilderError>)]>>();
     }
 
 
@@ -390,7 +392,7 @@ impl RustyMem {
             return 0;
         }
 
-        let mut result = vec::from_elem(16, 0u8);
+        let mut result = Vec::from_elem(16, 0u8);
         let mut digest = Sha256::new();
         digest.input(key.as_bytes());
         digest.result(result);
@@ -401,7 +403,7 @@ impl RustyMem {
     // Distribute the keys to N partitions according to its indexer function.
     // Build a key array for each partition for the belonging keys.
     fn distribute_keys(keys: &[&str], partition_count: uint, indexer: &fn(&str, uint)->uint) -> Box<[Box<[Box<str>]>]> {
-        let mut array_of_keys_for_partition = vec::from_elem(partition_count, vec![]);
+        let mut array_of_keys_for_partition = Vec::from_elem(partition_count, vec![]);
 
         // if partition_count == 1 {
         //     let array_at_index = &mut array_of_keys_for_partition[0];
@@ -483,50 +485,50 @@ impl MemStatus {
                     let tokens = strutil::clean_split(s, ' ');  
                     MemStatus::map_ascii_status(tokens[0])   
             },
-            Err(_)  => Network_Error
+            Err(_)  => MemStatus::Network_Error
         }
     }
 
     fn map_ascii_status(response_token: &str) -> MemStatus {
         match response_token {
-            "OK"            => Success,
-            "STORED"        => Success,
-            "NOT_STORED"    => Item_Not_Stored,
-            "EXISTS"        => Key_Exists,
-            "NOT_FOUND"     => Key_Not_Found,
-            "DELETED"       => Success,
-            "TOUCHED"       => Success,
-            "ERROR"         => Unknown_Command,
-            "CLIENT_ERROR"  => Invalid_Arguments,
-            "SERVER_ERROR"  => Internal_Error,
-            _               => Unknown_Response
+            "OK"            => MemStatus::Success,
+            "STORED"        => MemStatus::Success,
+            "NOT_STORED"    => MemStatus::Item_Not_Stored,
+            "EXISTS"        => MemStatus::Key_Exists,
+            "NOT_FOUND"     => MemStatus::Key_Not_Found,
+            "DELETED"       => MemStatus::Success,
+            "TOUCHED"       => MemStatus::Success,
+            "ERROR"         => MemStatus::Unknown_Command,
+            "CLIENT_ERROR"  => MemStatus::Invalid_Arguments,
+            "SERVER_ERROR"  => MemStatus::Internal_Error,
+            _               => MemStatus::Unknown_Response
         }
     }
 
     pub fn map_status(status: u16) -> MemStatus {
         match status {
-            0x0000 => Success,
-            0x0001 => Key_Not_Found,
-            0x0002 => Key_Exists,
-            0x0003 => Value_Too_Large,
-            0x0004 => Invalid_Arguments,
-            0x0005 => Item_Not_Stored,
-            0x0006 => Non_Numeric_Value,
-            0x0007 => Vbucket_Belongs_Another_Server,
-            0x0008 => Authentication_Error,
-            0x0009 => Authentication_Continue,
-            0x0081 => Unknown_Command,
-            0x0082 => Out_Of_Memory,
-            0x0083 => Not_Supported,
-            0x0084 => Internal_Error,
-            0x0085 => Busy,
-            0x0086 => Temporary_Failure,
+            0x0000 => MemStatus::Success,
+            0x0001 => MemStatus::Key_Not_Found,
+            0x0002 => MemStatus::Key_Exists,
+            0x0003 => MemStatus::Value_Too_Large,
+            0x0004 => MemStatus::Invalid_Arguments,
+            0x0005 => MemStatus::Item_Not_Stored,
+            0x0006 => MemStatus::Non_Numeric_Value,
+            0x0007 => MemStatus::Vbucket_Belongs_Another_Server,
+            0x0008 => MemStatus::Authentication_Error,
+            0x0009 => MemStatus::Authentication_Continue,
+            0x0081 => MemStatus::Unknown_Command,
+            0x0082 => MemStatus::Out_Of_Memory,
+            0x0083 => MemStatus::Not_Supported,
+            0x0084 => MemStatus::Internal_Error,
+            0x0085 => MemStatus::Busy,
+            0x0086 => MemStatus::Temporary_Failure,
 
-            0x0200 => Network_Error,
-            0x0201 => Unknown_Response,
-            0x0202 => Not_Implemented,
+            0x0200 => MemStatus::Network_Error,
+            0x0201 => MemStatus::Unknown_Response,
+            0x0202 => MemStatus::Not_Implemented,
 
-            _ => Unknown_Response
+            _ => MemStatus::Unknown_Response
         }
     }
     
@@ -567,7 +569,7 @@ impl MemData {
     }
 
     /// Return the retrieved data as Json
-    pub fn as_json(&self) -> Result<Json, json::Error> {
+    pub fn as_json(&self) -> Result<Json, json::BuilderError> {
         return json::from_str(self.as_str());
     }
 
