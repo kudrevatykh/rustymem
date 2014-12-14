@@ -17,7 +17,7 @@
 
 use std::result::Result;
 use std::str;
-use std::vec;
+use collections::vec::Vec;
 use std::io::net::tcp::TcpStream;
 use std::io::{Reader, Writer};
 //use std::unstable::intrinsics;
@@ -152,7 +152,7 @@ impl ProtoConnection for BinaryConnection {
         let mut header = BinaryConnection::new_req_header(BP_OP_Touch, key_bytes.len() as u16, 4u8, 0, 0);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
         offset = ioutil::pack_u32_be(body, offset, exptime as u32);
         ioutil::copy_bytes(body, offset, key_bytes, 0, key_bytes.len());
@@ -182,7 +182,7 @@ impl ProtoConnection for BinaryConnection {
         let mut header = BinaryConnection::new_req_header(BP_OP_Delete, key_bytes.len() as u16, 0, 0, 0);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
 
         self.write_header(&header);
@@ -215,7 +215,7 @@ impl ProtoConnection for BinaryConnection {
             let header = BinaryConnection::new_req_header(BP_OP_GetKQ, key_bytes.len() as u16, 0, 0, 0);
             debug!("  req: {}", header);
 
-            let mut body = vec::from_elem(header.body_len as uint, 0u8);
+            let mut body = Vec::from_elem(header.body_len as uint, 0u8);
             ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
 
             self.write_header(&header);
@@ -227,7 +227,7 @@ impl ProtoConnection for BinaryConnection {
         let mut header = BinaryConnection::new_req_header(BP_OP_GetK, key_bytes.len() as u16, 0, 0, 0);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         ioutil::copy_bytes(body, 0, key_bytes, 0, key_bytes.len());
 
         self.write_header(&header);
@@ -370,7 +370,7 @@ impl BinaryConnection {
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 4u8 + 4, data.len(), cas);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
         offset = ioutil::pack_u32_be(body, offset, flags);
         offset = ioutil::pack_u32_be(body, offset, exptime as u32);
@@ -396,7 +396,7 @@ impl BinaryConnection {
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 0, data.len(), 0);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
         offset = ioutil::copy_bytes(body, offset, key_bytes, 0, key_bytes.len());
         ioutil::copy_bytes(body, offset, data, 0, data.len());
@@ -420,7 +420,7 @@ impl BinaryConnection {
         let mut header = BinaryConnection::new_req_header(opcode, key_bytes.len() as u16, 8u8 + 8 + 4, 0, 0);
         debug!("  req: {}", header);
 
-        let mut body = vec::from_elem(header.body_len as uint, 0u8);
+        let mut body = Vec::from_elem(header.body_len as uint, 0u8);
         let mut offset = 0;
         offset = ioutil::pack_u64_be(body, offset, inc_amount);
         offset = ioutil::pack_u64_be(body, offset, init_value);
@@ -480,7 +480,7 @@ impl BinaryConnection {
     }
 
     fn read_upto(&mut self, len_to_read: uint) -> Box<[u8]> {
-        let mut buf = vec::from_elem(len_to_read, 0u8);
+        let mut buf = Vec::from_elem(len_to_read, 0u8);
         self.read_buf_upto(buf, 0, len_to_read);
         return buf;
     }
