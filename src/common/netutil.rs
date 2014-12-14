@@ -14,9 +14,9 @@
  ******************************************************************************/
 
 
-use std::rt::io::net::ip::IpAddr;
-use std::rt::io::net::ip::Ipv4Addr;
-use std::rt::io::net::ip::SocketAddr;
+use std::io::net::ip::IpAddr;
+use std::io::net::ip::Ipv4Addr;
+use std::io::net::ip::SocketAddr;
 
 
 use super::strutil;

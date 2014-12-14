@@ -18,9 +18,9 @@
 use std::result::Result;
 use std::str;
 use std::vec;
-use std::rt::io::net::tcp::TcpStream;
-use std::rt::io::{Reader, Writer};
-use std::unstable::intrinsics;
+use std::io::net::tcp::TcpStream;
+use std::io::{Reader, Writer};
+//use std::unstable::intrinsics;
 
 
 use common::netutil;
@@ -531,12 +531,12 @@ impl PacketHeader {
     }
 
 
-    pub fn to_network(&mut self) {
-        self.key_len = intrinsics::to_be16(self.key_len as i16) as u16;
-        self.status_vbucket = intrinsics::to_be16(self.status_vbucket as i16) as u16;
-        self.body_len = intrinsics::to_be32(self.body_len as i32) as u32;
-        self.cas = intrinsics::to_be64(self.cas as i64) as u64;
-    }
+//    pub fn to_network(&mut self) {
+//        self.key_len = intrinsics::to_be16(self.key_len as i16) as u16;
+//        self.status_vbucket = intrinsics::to_be16(self.status_vbucket as i16) as u16;
+//        self.body_len = intrinsics::to_be32(self.body_len as i32) as u32;
+//        self.cas = intrinsics::to_be64(self.cas as i64) as u64;
+//    }
 
     pub fn pack(&self, buf: &mut [u8], mut offset: uint) -> uint {
         offset = ioutil::pack_u8_be(buf, offset, self.magic);

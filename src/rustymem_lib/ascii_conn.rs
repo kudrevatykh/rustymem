@@ -17,8 +17,8 @@
 
 use std::result::Result;
 use std::vec;
-use std::rt::io::net::tcp::TcpStream;
-use std::rt::io::{Reader, Writer};
+use std::io::net::tcp::TcpStream;
+use std::io::{Reader, Writer};
 
 
 use common::strutil;

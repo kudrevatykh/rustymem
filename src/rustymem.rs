@@ -27,17 +27,17 @@
  ******************************************************************************/
 
 
-extern crate extra;
+extern crate serialize;
+extern crate rustc;
 
 use std::result::Result;
 use std::str;
-use std::to_str::ToStr;
+use std::string::ToString;
 use std::vec;
-use extra::json;
-use extra::json::Json;
-use extra::json::ToJson;
-use extra::md5::Md5;
-use extra::digest::Digest;
+use serialize::json;
+use serialize::json::Json;
+use serialize::json::ToJson;
+use rustc::util::sha2::Sha256;
 
 use common::strutil;
 use common::netutil;
@@ -127,7 +127,7 @@ impl RustyMem {
 
     /// Set data value as string at key in memcached, with the expiration exptime in seconds.  Setting exptime to 0 for no expiration.
     /// Set value can be retrieved with get_as().
-    pub fn set_as<T: ToStr>(&mut self, key: &str, exptime: uint, value: &T) -> MemResult<u64> {
+    pub fn set_as<T: ToString>(&mut self, key: &str, exptime: uint, value: &T) -> MemResult<u64> {
         return self.set_str(key, exptime, value.to_str());
     }
 
@@ -153,7 +153,7 @@ impl RustyMem {
     /// Check and set data value as string at key in memcached, with the expiration exptime in seconds.  Setting exptime to 0 for no expiration.
     /// Pass in the last retrieved MemData.cas to check.
     /// Set value can be retrieved with get_as().
-    pub fn cas_as<T: ToStr>(&mut self, key: &str, cas: u64, exptime: uint, value: &T) -> MemResult<u64> {
+    pub fn cas_as<T: ToString>(&mut self, key: &str, cas: u64, exptime: uint, value: &T) -> MemResult<u64> {
         return self.cas_str(key, cas, exptime, value.to_str());
     }
 
@@ -174,7 +174,7 @@ impl RustyMem {
         return self.conn(key).p_add(key, data_str.as_bytes(), 0, 0, exptime, false);
     }
 
-    pub fn add_as<T: ToStr>(&mut self, key: &str, exptime: uint, value: &T) -> MemResult<u64> {
+    pub fn add_as<T: ToString>(&mut self, key: &str, exptime: uint, value: &T) -> MemResult<u64> {
         return self.add_str(key, exptime, value.to_str());
     }
 
@@ -192,7 +192,7 @@ impl RustyMem {
         return self.conn(key).p_replace(key, data_str.as_bytes(), cas, 0, exptime, false);
     }
 
-    pub fn replace_as<T: ToStr>(&mut self, key: &str, cas: u64, exptime: uint, value: &T) -> MemResult<u64> {
+    pub fn replace_as<T: ToString>(&mut self, key: &str, cas: u64, exptime: uint, value: &T) -> MemResult<u64> {
         return self.replace_str(key, cas, exptime, value.to_str());
     }
 
@@ -391,7 +391,7 @@ impl RustyMem {
         }
 
         let mut result = vec::from_elem(16, 0u8);
-        let mut digest = Md5::new();
+        let mut digest = Sha256::new();
         digest.input(key.as_bytes());
         digest.result(result);
         let val4 = ioutil::trunc_bytes(result) as uint;
@@ -592,9 +592,9 @@ impl MemData {
 
 }
 
-impl ToStr for MemData {
-    fn to_str(&self) -> Box<str> {
-        return str::from_utf8(self.data);
+impl ToString for MemData {
+    fn to_string(&self) -> String {
+        return String::from_utf8(self.data);
     }
 }
 
